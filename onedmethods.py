@@ -33,7 +33,7 @@ def passive_search(file, func, beg, end, eps):
     print("\n-----------------------------------\n", file=file)
     for t in range_list:
         cur = func(t)
-        print("\t_t_=", t, "F(t)=", cur, end='  \n', file=file)
+        print("_t_=", t, "F(t)=", cur, end='  \n', file=file)
         n += 1
         if cur <= fmin:
             fmin = cur
@@ -57,7 +57,7 @@ def dichotomi_search(file, func, beg, end, eps):
     while right - left > 2*eps:
         c = (right + left - delta) / 2.0
         d = (right + left + delta) / 2.0
-        print("\t_a_=", left, "_c_=", c, "_d_=", d, "_b_=", right, end='  \n', file=file)
+        print("_a_=", left, "_c_=", c, "_d_=", d, "_b_=", right, end='  \n', file=file)
         if func(c) < func(d):
             right = d
         else:
@@ -83,7 +83,7 @@ def gold_section_method(file, func, beg, end, eps):
     n = 2 # function calculate counter
     print("\n-----------------------------------\n", file=file)
     while right - left > 2*eps:
-        print("\t_a_=", left, "_c_=", c, "_d_=", d, "_b_=", right, end='  \n', file=file)
+        print("_a_=", left, "_c_=", c, "_d_=", d, "_b_=", right, end='  \n', file=file)
         if fc < fd:
             right = d
             if right - left < 2*eps:
@@ -129,7 +129,7 @@ def fibbonachi_method(file, func, beg, end, eps):
     n = 2 # function calculate counter
     print("\n-----------------------------------\n", file=file)
     for i in range(m):
-        print("\t_a_=", left, "_c_=", c, "_d_=", d, "_b_=", right, end='  \n', file=file)
+        print("_a_=", left, "_c_=", c, "_d_=", d, "_b_=", right, end='  \n', file=file)
         if fc < fd:
             right = d
             d, fd = c, fc
@@ -173,5 +173,6 @@ def run_all_methods(file, func, beg, end, eps):
 
 if __name__ == '__main__':
     file = open('readme.md','w')
+    print("#F= 3x^4 - 10x^3 + 21x^2 + 12*x  ", file=file)
     run_all_methods(file, fun1746, 0, 0.5, 0.01)
     #run_all_methods(sqr_x, -5, 5, 0.01)
