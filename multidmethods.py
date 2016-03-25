@@ -116,6 +116,7 @@ def convergent_series(func, grad, x, eps):
 
 
 def run_all_methods(file, func, grad, beg, eps):
+    print("## F(X)= sqrt(1 + x[0]^2 + x[1]^2)", end="  \n\n---  \n\n", file=file)
     ans = coordinate_wise_method(func, beg, eps)
     print("Coordinate:  ", file=file)
     print("Xmin =", ans, end="  \n", file=file)
@@ -130,13 +131,13 @@ def run_all_methods(file, func, grad, beg, eps):
     print("Gradient with changing step:  ", file=file)
     print("Xmin =", ans, end="  \n", file=file)
     print("F(Xmin) = ", func(ans), file=file)
-    '''
+
     print("\n\n", file=file)
     ans = convergent_series(func, grad, beg, eps)
-    print("Расходящийся ряд:", file=file)
+    print("Convergent series:  ", file=file)
     print("Xmin =", ans, end="  \n", file=file)
     print("F(Xmin) = ", func(ans), file=file)
-    '''
+
 
 
 
