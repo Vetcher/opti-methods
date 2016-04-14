@@ -1,6 +1,5 @@
 import time
 
-
 # F(X)= sqrt(1 + x[0]^2 + x[1]^2)
 def f17102(x):
     return (1 + x[0]**2 + x[1]**2)**.5
@@ -66,7 +65,7 @@ def gradient_change_step(func, grad, x, eps):
 
 
 # Покоординатный спуск
-def coordinate_wise_method(func, x, eps):
+def coordinate_wise_method(func, grad, x, eps):
     next = list(x)
     count = 0
     while True:
@@ -120,7 +119,6 @@ def coordinate_wise_method(func, x, eps):
 def fast_gradient(func, grad, x, eps):
     cur = list(x)
     count = 0
-    lbd = 0.5
     f_cur = func(x)
     # Do - While loop
     while True:
@@ -214,52 +212,35 @@ def convergent_series(func, grad, x, eps):
     return [cur, count]
 
 
-def run_all_methods(file, func, grad, beg, eps):
-    print("## ", func.__name__, "  \nstart from ", beg, end="  \n\n---  \n\n", file=file)
+def fastest_grad_method(func, grad, x, eps):
+    pass
 
+
+allmethods = [
+    gradient_fix_step,
+    gradient_change_step,
+    coordinate_wise_method,
+    fast_gradient,
+    #convergent_series
+]
+
+
+def run_method(output, method, func, grad, beg, eps):
+    print("#### Method: ", method.__name__, file=output)
     start = time.time()
-    ans = coordinate_wise_method(func, beg, eps)
-    print("__Coordinate__:  ", file=file)
+    ans = method(func, grad, beg, eps)
+    print("__Method values__:  ", file=file)
     print("Xmin =", ans[0], end="  \n", file=file)
     print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
     print("iterations =", ans[1], end="  \n", file=file)
     print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
     print("\n\n", file=file)
 
-    start = time.time()
-    ans = gradient_fix_step(func, grad, beg, eps)
-    print("__Gradient with fixed step__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
 
-    start = time.time()
-    ans = gradient_change_step(func, grad, beg, eps)
-    print("__Gradient with changing step__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
-
-    start = time.time()
-    ans = fast_gradient(func, grad, beg, eps)
-    print("__Fastest gradient method__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
-
-    start = time.time()
-    ans = convergent_series(func, grad, beg, eps)
-    print("__Convergent series__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time =", round((time.time() - start)*1000, 3), "(ms)", file=file)
+def run_all_methods(output, func, grad, beg, eps):
+    print("## ", func.__name__, "  \nstart from ", beg, "eps=", eps, end="  \n\n---  \n\n", file=output)
+    for each in allmethods:
+        run_method(output, each, func, grad, beg, eps)
 
 
 if __name__ == '__main__':

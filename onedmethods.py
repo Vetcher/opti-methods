@@ -1,5 +1,6 @@
 import time
 
+
 def frange(start, stop, step):
     i = start
     while i < stop:
@@ -7,30 +8,32 @@ def frange(start, stop, step):
         i += step
 
 
-def arg_check(func, beg, end, eps):
-    if func is None:
-        raise AttributeError("Function is None")
-    if beg is None:
-        raise AttributeError("Left edge of area is None")
-    if end is None:
-        raise AttributeError("Right edge of area is None")
-    if eps is None:
-        raise AttributeError("Epsilon is None")
-    if beg > end:
-        raise AttributeError("Wrong area")
-    if eps == 0:
-        raise AttributeError("Epsilon is 0")
-    #return True
+class OptiFunc(object):
+    def __init__(self, func, grad=None, params=None):
+        self.par = params
+        self.func = func
+        self.gradient = grad
+
+    def value(self, x):
+        if self.par is None:
+            return self.func(x)
+        return self.func(x, self.par)
+
+    def grad(self, x):
+        if self.gradient is None:
+            return 0
+        if self.par is None:
+            return self.gradient(x)
+        return self.gradient(x, self.par)
 
 
-def passive_search(func, beg, end, eps):
-    arg_check(func, beg, end, eps)
+def passive_search(ofunc, gradd, beg, end, eps):
     tmin = beg
-    fmin = func(tmin)
+    fmin = ofunc.value(tmin)
     range_list = frange(beg, end, eps)
     n = 0
     for t in range_list:
-        cur = func(t)
+        cur = ofunc.value(t)
         n += 1
         if cur <= fmin:
             fmin = cur
@@ -41,15 +44,14 @@ def passive_search(func, beg, end, eps):
 
 
 #  https://en.wikipedia.org/wiki/Bisection_method
-def dichotomi_search(func, beg, end, eps):
-    arg_check(func, beg, end, eps)
+def dichotomi_search(ofunc, gradd, beg, end, eps):
     delta = eps / 2
     left, right = beg, end
-    n = 0 # function calculate counter
+    n = 0  # function calculate counter
     while right - left > 2*eps:
         c = (right + left - delta) / 2.0
         d = (right + left + delta) / 2.0
-        if func(c) < func(d):
+        if ofunc.value(c) < ofunc.value(d):
             right = d
         else:
             left = c
@@ -59,15 +61,14 @@ def dichotomi_search(func, beg, end, eps):
 
 
 #  https://en.wikipedia.org/wiki/Golden_section_search
-def gold_section_method(func, beg, end, eps):
-    arg_check(func, beg, end, eps)
+def gold_section_method(ofunc, gradd, beg, end, eps):
     if end - beg < 2*eps:
         return (end + beg) / 2.0
     left, right = beg, end
     c = left + (right - left) * (3 - 5**(.5)) / 2.0
     d = right - (right - left) * (3 - 5**(.5)) / 2.0
-    fc, fd = func(c), func(d)
-    n = 2 # function calculate counter
+    fc, fd = ofunc.value(c), ofunc.value(d)
+    n = 2  # function calculate counter
     while right - left > 2*eps:
         if fc < fd:
             right = d
@@ -75,14 +76,14 @@ def gold_section_method(func, beg, end, eps):
                 break
             d, fd = c, fc
             c = left + (right - left) * (3 - 5**(.5)) / 2.0
-            fc = func(c)
+            fc = ofunc.value(c)
         else:
             left = c
             if right - left < 2*eps:
                 break
             c, fc = d, fd
             d = right - (right - left) * (3 - 5**(.5)) / 2.0
-            fd = func(d)
+            fd = ofunc.value(d)
         n += 1
     return [(right + left) / 2.0, n]
 
@@ -91,81 +92,79 @@ def fib(n):
     a, b = 0, 1
     for i in range(n):
         temp = b
-        b = a + b
+        b += a
         a = temp
     return b
 
 
-def fibbonachi_method(func, beg, end, eps):
-    arg_check(func, beg, end, eps)
+def fibbonachi_method(ofunc, gradd, beg, end, eps):
     m = 0
     while fib(m + 2) < (end - beg) / eps:
         m += 1
     left, right = beg, end
     c = left + (right - left)*(fib(m)/fib(m + 2))
     d = left + (right - left)*(fib(m + 1)/fib(m + 2))
-    fc, fd = func(c), func(d)
+    fc, fd = ofunc.value(c), ofunc.value(d)
     n = 2 # function calculate counter
     for i in range(m):
         if fc < fd:
             right = d
             d, fd = c, fc
             c = left + (right - left)*(fib(m - i)/fib(m - i + 2))
-            fc = func(c)
+            fc = ofunc.value(c)
         else:
             left = c
             c, fc = d, fd
             d = left + (right - left)*(fib(m - i + 1)/fib(m - i + 2))
-            fd = func(d)
+            fd = ofunc.value(d)
         n += 1
     return [(right + left) / 2.0, n]
 
 
-def tangents_search(func, grad, beg, end, eps):
-    arg_check(func, beg, end, eps)
+def tangents_search(ofunc, gradd, beg, end, eps):
     count = 0
     if end - beg < 2 * eps:
         return [(end + beg) / 2.0, count]
 
     left = beg
     right = end
-    atemp = grad(left)*left - func(left)
-    btemp = func(right) - grad(right)*right
-    ctemp = grad(left) - grad(right)
-    mid = (atemp + btemp) / (ctemp)
-    while grad(mid) > eps and (right - left) > 2 * eps:
-        if grad(mid) < 0:
+    atemp = ofunc.grad(left)*left - ofunc.value(left)
+    btemp = ofunc.value(right) - ofunc.grad(right)*right
+    ctemp = ofunc.grad(left) - ofunc.grad(right)
+    mid = (atemp + btemp) / ctemp
+    while ofunc.grad(mid) > eps and (right - left) > 2 * eps:
+        if ofunc.grad(mid) < 0:
             left = mid
         else:
             right = mid
-        a = grad(left)*left - func(left)
-        b = func(right) - func(right)*right
-        c = grad(left) - grad(right)
+        a = ofunc.grad(left)*left - ofunc.value(left)
+        b = ofunc.value(right) - ofunc.value(right)*right
+        c = ofunc.grad(left) - ofunc.grad(right)
         count += 1
-        mid = (a + b) / (c)
+        mid = (a + b) / c
     return [mid, count]
 
 
-def nuton_raffson(func, grad, gradd, beg, end, eps):
+def nuton_raffson(ofunc, gradd, beg, end, eps):
     lastp = beg
-    point = lastp - grad(lastp) / gradd(lastp)
+    point = lastp - ofunc.grad(lastp) / gradd(lastp)
     count = 1
-    while abs(lastp - point) > 2*eps and abs(grad(point)) > eps:
+    while abs(lastp - point) > 2*eps and abs(ofunc.grad(point)) > eps:
         lastp = point
-        point = lastp - grad(lastp) / gradd(lastp)
+        point = lastp - ofunc.grad(lastp) / gradd(lastp)
         count += 1
     return [point, count]
 
 
-def tangents_method(func, grad, beg, end, eps):
+def tangents_method(ofunc, gradd, beg, end, eps):
     count = 1
     lastlastp = beg
     lastp = end
-    point = lastp - grad(lastp) * (lastlastp - lastp) / (grad(lastlastp) - grad(lastp))
-    while abs(lastp - point) > 2 * eps and abs(grad(point)) > eps:
+    point = lastp - ofunc.grad(lastp) * (lastlastp - lastp) / (ofunc.grad(lastlastp) - ofunc.grad(lastp))
+    while abs(lastp - point) > 2 * eps and abs(ofunc.grad(point)) > eps:
         lastlastp = lastp
         lastp = point
-        point = lastp - grad(lastp) * (lastlastp - lastp) / (grad(lastlastp) - grad(lastp))
+        point = lastp - ofunc.grad(lastp) * (lastlastp - lastp) / (ofunc.grad(lastlastp) - ofunc.grad(lastp))
         count += 1
     return [point, count]
 
@@ -197,74 +196,39 @@ def sqr_dd(x):
     return 2
 
 
-def run_all_methods(file, func, grad, gradd, beg, end, eps):
-    print("## ", func.__name__, "  \non [", beg, ",", end, "]", end="  \n\n---  \n\n", file=file)
+allmethods = [
+    passive_search,
+    dichotomi_search,
+    gold_section_method,
+    fibbonachi_method,
+    tangents_search,
+    tangents_method,
+    nuton_raffson
+]
 
+
+def run_method(output, method, ofunc, gradd, beg, end, eps):
+    print("#### Method: ", method.__name__, file=output)
     start = time.time()
-    ans = passive_search(func, beg, end, eps)
-    print("__Passive search__:  ", file=file)
+    ans = method(ofunc, gradd, beg, end, eps)
+    print("__Method values__:  ", file=file)
     print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
+    print("F(Xmin) = ", ofunc.value(ans[0]), end="  \n", file=file)
     print("iterations =", ans[1], end="  \n", file=file)
     print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
     print("\n\n", file=file)
 
-    start = time.time()
-    ans = dichotomi_search(func, beg, end, eps)
-    print("__Dihotomy search__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
 
-    start = time.time()
-    ans = gold_section_method(func, beg, end, eps)
-    print("__Gold section search__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
+def run_all_methods(output, ofunc, gradd, beg, end, eps):
+    print("## ", ofunc.func.__name__, "  \non [", beg, ",", end, "]", end="  \n\n---  \n\n", file=file)
+    for each in allmethods:
+        run_method(output, each, ofunc, gradd, beg, end, eps)
 
-    start = time.time()
-    ans = fibbonachi_method(func, beg, end, eps)
-    print("__Fibbonachi method__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
-
-    start = time.time()
-    ans = tangents_search(func, grad, beg, end, eps)
-    print("__Tangents__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
-
-    start = time.time()
-    ans = nuton_raffson(func, grad, gradd, beg, end, eps)
-    print("__Nuton-Raffson__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
-
-    start = time.time()
-    ans = tangents_method(func, grad, beg, end, eps)
-    print("__Tangents(chords)__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
 
 if __name__ == '__main__':
     file = open('onedmethods.md','w')
-    run_all_methods(file, fun1746, fun1746_g, fun1746_gg, 0, 0.5, 0.01)
-    run_all_methods(file, fun1746, fun1746_g, fun1746_gg, -2, 4, 0.01)
-    run_all_methods(file, sqr_x, sqr_d, sqr_dd, -5, 5, 0.01)
+    ofunc = OptiFunc(fun1746, fun1746_g)
+    run_all_methods(file, ofunc, fun1746_gg, 0, 0.5, 0.01)
+    run_all_methods(file, ofunc, fun1746_gg, -2, 4, 0.01)
+    ofunc = OptiFunc(sqr_x, sqr_d)
+    run_all_methods(file, ofunc, sqr_dd, -5, 5, 0.01)
