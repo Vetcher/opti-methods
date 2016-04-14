@@ -9,22 +9,28 @@ def frange(start, stop, step):
 
 
 class OptiFunc(object):
-    def __init__(self, func, grad=None, params=None):
+    def __init__(self, func, grad=None, params=None, infunc=None, ingrad=None):
         self.par = params
         self.func = func
         self.gradient = grad
+        self.infunc = infunc
+        self.ingrad = ingrad
 
     def value(self, x):
         if self.par is None:
             return self.func(x)
-        return self.func(x, self.par)
+        if self.infunc is None:
+            return self.func(x, self.par)
+        return self.func(x, self.par, self.infunc)
 
     def grad(self, x):
         if self.gradient is None:
             return 0
         if self.par is None:
             return self.gradient(x)
-        return self.gradient(x, self.par)
+        if self.ingrad is None:
+            return self.gradient(x, self.par)
+        return self.gradient(x, self.par, self.ingrad)
 
 
 def passive_search(ofunc, gradd, beg, end, eps):
@@ -65,8 +71,8 @@ def gold_section_method(ofunc, gradd, beg, end, eps):
     if end - beg < 2*eps:
         return (end + beg) / 2.0
     left, right = beg, end
-    c = left + (right - left) * (3 - 5**(.5)) / 2.0
-    d = right - (right - left) * (3 - 5**(.5)) / 2.0
+    c = left + (right - left) * (3 - 5**.5) / 2.0
+    d = right - (right - left) * (3 - 5**.5) / 2.0
     fc, fd = ofunc.value(c), ofunc.value(d)
     n = 2  # function calculate counter
     while right - left > 2*eps:

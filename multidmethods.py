@@ -1,4 +1,6 @@
 import time
+import onedmethods as od
+
 
 # F(X)= sqrt(1 + x[0]^2 + x[1]^2)
 def f17102(x):
@@ -23,6 +25,27 @@ def norma(x):
     for i in range(len(x)):
         ans += x[i]**2
     return ans**0.5
+
+
+def alf_function(a, params):
+    return params[0](params[1] - a * params[2])
+
+
+# params[0] current x, [1]: grad(x), [2]: direction
+def coordinate_alf(a, params, func):
+    copy = list(params[0])
+    copy[params[2]] = params[0][params[2]] - a * params[1][params[2]]
+    return func(copy)
+
+
+def coordinate_alf_g(a, params, grad):
+    copy = list(params[0])
+    copy[params[2]] = params[0][params[2]] - a * params[1][params[2]]
+    return -params[1][params[2]]*grad(copy)
+
+
+def alf_function_g(a, params):
+    return -params[2]*params[0](params[1] - a*params[2])
 
 
 # Градиентный спуск с фиксированным шагом
@@ -70,7 +93,7 @@ def coordinate_wise_method(func, grad, x, eps):
     count = 0
     while True:
         cur = list(next)
-        for i in range(2):
+        for i in range(len(x)):
             # Gold section method
             right = next[i]
             if -right < right:
@@ -229,12 +252,12 @@ def run_method(output, method, func, grad, beg, eps):
     print("#### Method: ", method.__name__, file=output)
     start = time.time()
     ans = method(func, grad, beg, eps)
-    print("__Method values__:  ", file=file)
-    print("Xmin =", ans[0], end="  \n", file=file)
-    print("F(Xmin) = ", func(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
-    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
-    print("\n\n", file=file)
+    print("__Method values__:  ", file=output)
+    print("Xmin =", ans[0], end="  \n", file=output)
+    print("F(Xmin) = ", func(ans[0]), end="  \n", file=output)
+    print("iterations =", ans[1], end="  \n", file=output)
+    print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
+    print("\n\n", file=output)
 
 
 def run_all_methods(output, func, grad, beg, eps):

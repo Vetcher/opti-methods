@@ -8,7 +8,7 @@ __Method values__:
 Xmin = 0  
 F(Xmin) =  0  
 iterations = 2  
-time =  0.501 (ms)
+time =  0.0 (ms)
 
 
 
@@ -62,7 +62,7 @@ __Method values__:
 Xmin = -0.24044756469871748  
 F(Xmin) =  -1.5222125491095355  
 iterations = 3  
-time =  0.501 (ms)
+time =  0.0 (ms)
 
 
 
@@ -76,7 +76,7 @@ __Method values__:
 Xmin = -0.23999999999999844  
 F(Xmin) =  -1.52220672  
 iterations = 178  
-time =  0.0 (ms)
+time =  1.006 (ms)
 
 
 
@@ -94,7 +94,7 @@ __Method values__:
 Xmin = -0.23990673495078912  
 F(Xmin) =  -1.5222040303609972  
 iterations = 13  
-time =  0.501 (ms)
+time =  0.0 (ms)
 
 
 
@@ -144,7 +144,7 @@ __Method values__:
 Xmin = -6.230779781013496e-14  
 F(Xmin) =  3.8822616679486586e-27  
 iterations = 502  
-time =  0.499 (ms)
+time =  1.001 (ms)
 
 
 
@@ -171,7 +171,7 @@ __Method values__:
 Xmin = -0.0019336224859110747  
 F(Xmin) =  3.7388959180209244e-06  
 iterations = 16  
-time =  0.5 (ms)
+time =  0.0 (ms)
 
 
 
