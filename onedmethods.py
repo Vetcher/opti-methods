@@ -220,7 +220,7 @@ def run_method(output, method, ofunc, gradd, beg, end, eps):
     print("__Method values__:  ", file=file)
     print("Xmin =", ans[0], end="  \n", file=file)
     print("F(Xmin) = ", ofunc.value(ans[0]), end="  \n", file=file)
-    print("iterations =", ans[1], end="  \n", file=file)
+    print("func calculations =", ans[1], end="  \n", file=file)
     print("time = ", round((time.time() - start)*1000, 3), "(ms)", file=file)
     print("\n\n", file=file)
 
