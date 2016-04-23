@@ -20,6 +20,13 @@ def f17102_dg(x):
     return ans
 
 
+def f17101(x):
+    return 4*x[0]**2+x[1]**2-2*x[0]*x[1]+6*x[0]-x[1]-2
+
+
+def f17101_g(x):
+    return [8*x[0]-2*x[1]+6, 2*x[1]-2*x[0]-1]
+
 def fsqr(x):
     return (x[0]-5)**2 + (x[1]-3)**4
 
@@ -307,14 +314,15 @@ def fastest_grad_method_p(func, grad, x, eps):
 def ravine_method(func, grad, x, eps):
     count = 0
     cur = list(x)
-    cur_n = list(cur)
+
     while True:
-        mn1 = mngs(func, grad, cur, eps*eps, ExprCount(0, len(x) - 1))
+        mn1 = mngs(func, grad, cur, eps, ExprCount(0, len(x) - 1))
         if norma(grad(cur)) < eps:
             break
+        cur_n = list(cur)
         for i, it in enumerate(cur_n):
             cur_n[i] += eps
-        mn2 = mngs(func, grad, cur_n, eps*eps, ExprCount(0, len(x) - 1))
+        mn2 = mngs(func, grad, cur_n, eps, ExprCount(0, len(x) - 1))
         count += mn1[1] + mn2[1]
         direction = list(mn1[0])
         for i, it in enumerate(direction):
@@ -442,3 +450,4 @@ if __name__ == '__main__':
     file = open('multidmethods.md', 'w')
     run_all_methods(file, f17102, f17102_g, f17102_dg, [2, 2], 0.001)
     run_all_methods(file, fsqr, fsqrt_g, fsqrt_dg, [2, 2], 0.001)
+    run_all_methods(file, f17101, f17101_g, None, [1, 1], 0.001)

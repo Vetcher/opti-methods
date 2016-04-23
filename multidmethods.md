@@ -9,7 +9,7 @@ __Answer__:
 `F(Xmin)` =  1.0000004791819337  
 __Performance__:  
 `func calls` = 89  
-`time` =  1.003 (ms)
+`time` =  1.001 (ms)
 
 
 
@@ -19,7 +19,7 @@ __Answer__:
 `F(Xmin)` =  1.0000001756753605  
 __Performance__:  
 `func calls` = 38  
-`time` =  1.001 (ms)
+`time` =  0.0 (ms)
 
 
 
@@ -39,7 +39,7 @@ __Answer__:
 `F(Xmin)` =  1.0000004708061647  
 __Performance__:  
 `func calls` = 523  
-`time` =  1.0 (ms)
+`time` =  2.002 (ms)
 
 
 
@@ -49,17 +49,17 @@ __Answer__:
 `F(Xmin)` =  1.0000003485209188  
 __Performance__:  
 `func calls` = 1216  
-`time` =  4.003 (ms)
+`time` =  3.001 (ms)
 
 
 
 ## Method:  ravine_method
 __Answer__:  
-`Xmin` = [1.8486380767263055e-05, 1.8486380767263055e-05]  
-`F(Xmin)` =  1.0000000003417462  
+`Xmin` = [2.5710564176533585e-05, 2.5710564176533585e-05]  
+`F(Xmin)` =  1.000000000661033  
 __Performance__:  
-`func calls` = 36  
-`time` =  5.003 (ms)
+`func calls` = 38  
+`time` =  2.002 (ms)
 
 
 
@@ -79,7 +79,7 @@ __Answer__:
 `F(Xmin)` =  1.0000003197807024  
 __Performance__:  
 `func calls` = 649  
-`time` =  3.002 (ms)
+`time` =  2.001 (ms)
 
 
 
@@ -104,7 +104,7 @@ __Answer__:
 `F(Xmin)` =  1.5651249010144657e-05  
 __Performance__:  
 `func calls` = 310  
-`time` =  2.002 (ms)
+`time` =  1.001 (ms)
 
 
 
@@ -134,7 +134,7 @@ __Answer__:
 `F(Xmin)` =  8.3536828117515e-06  
 __Performance__:  
 `func calls` = 910  
-`time` =  2.001 (ms)
+`time` =  3.001 (ms)
 
 
 
@@ -144,17 +144,17 @@ __Answer__:
 `F(Xmin)` =  1.2210773490322675e-05  
 __Performance__:  
 `func calls` = 1948  
-`time` =  6.004 (ms)
+`time` =  5.004 (ms)
 
 
 
 ## Method:  ravine_method
 __Answer__:  
-`Xmin` = [4.999996310425734, 3.0000129984112056]  
-`F(Xmin)` =  1.361295829039682e-11  
+`Xmin` = [4.999807685963033, 3.0519088833952823]  
+`F(Xmin)` =  7.297488332784206e-06  
 __Performance__:  
 `func calls` = 26  
-`time` =  69.55 (ms)
+`time` =  2.002 (ms)
 
 
 
@@ -174,7 +174,92 @@ __Answer__:
 `F(Xmin)` =  1.4283399450914267e-06  
 __Performance__:  
 `func calls` = 500  
-`time` =  2.502 (ms)
+`time` =  3.002 (ms)
+
+
+
+## Method:  conjugate_gradient
+__Error__:` (34, 'Result too large') `
+
+
+
+#  f17101   
+start from  [1, 1] eps= 0.001  
+
+---  
+
+## Method:  gradient_fix_step
+__Answer__:  
+`Xmin` = [-0.8331309407679619, -0.3326732654461008]  
+`F(Xmin)` =  -4.3333330009783815  
+__Performance__:  
+`func calls` = 48  
+`time` =  1.001 (ms)
+
+
+
+## Method:  gradient_change_step
+__Answer__:  
+`Xmin` = [-0.833251240584886, -0.33290287230231586]  
+`F(Xmin)` =  -4.333333191755215  
+__Performance__:  
+`func calls` = 154  
+`time` =  1.001 (ms)
+
+
+
+## Method:  coordinate_wise_method
+__Answer__:  
+`Xmin` = [-0.7498826389195918, 0.0]  
+`F(Xmin)` =  -4.2499999449055075  
+__Performance__:  
+`func calls` = 69  
+`time` =  0.0 (ms)
+
+
+
+## Method:  fast_gradient
+__Answer__:  
+`Xmin` = [-0.8332832384970644, -0.33334850082933176]  
+`F(Xmin)` =  -4.333333321545683  
+__Performance__:  
+`func calls` = 538316  
+`time` =  1576.127 (ms)
+
+
+
+## Method:  fastest_grad_method_p
+__Answer__:  
+`Xmin` = [-0.8334484531952838, -0.33352031553349554]  
+`F(Xmin)` =  -4.33333328841139  
+__Performance__:  
+`func calls` = 157804  
+`time` =  463.328 (ms)
+
+
+
+## Method:  ravine_method
+__Answer__:  
+`Xmin` = [-0.8333617606495508, -0.33307479502597964]  
+`F(Xmin)` =  -4.333333248559727  
+__Performance__:  
+`func calls` = 30  
+`time` =  41.029 (ms)
+
+
+
+## Method:  newton_method
+__Error__:` 'NoneType' object is not callable `
+
+
+
+## Method:  quasi_newton
+__Answer__:  
+`Xmin` = [-0.8333743726262427, -0.3332674345834837]  
+`F(Xmin)` =  -4.333333316844918  
+__Performance__:  
+`func calls` = 717  
+`time` =  3.002 (ms)
 
 
 
