@@ -43,6 +43,7 @@ def fsqrt_dg(x):
     return ans
 
 
+# Метод золотого сечения в пространстве
 def gold_section_in_space(func, x, eps, dir):
     cur = list(x)
     count = 1
@@ -109,8 +110,11 @@ def gold_section_in_space(func, x, eps, dir):
             count += 1
             fd = func(d_arg)
     delta = (right + left) / 2.0
-    for i in range(len(cur)):
-        cur[i] = old[i] - delta * direction[i]
+    test = list()
+    for i, it in enumerate(cur):
+        test.append(old[i] - delta*direction[i])
+    if func(test) < func(cur):
+        cur = test
 
     return cur, count
 
@@ -242,6 +246,7 @@ class Expr(object):
         return True
 
 
+# Основа МНГСа
 def mngs(func, grad, x, eps, expr):
     cur = list(x)
     count = 1
@@ -294,6 +299,7 @@ class ExprCount(Expr):
         return ans
 
 
+# Метод Наискорейшего Градиентного Спуска (МНГС)
 def fastest_grad_method_p(func, grad, x, eps):
     count = 0
     cur = list(x)
@@ -311,6 +317,7 @@ def fastest_grad_method_p(func, grad, x, eps):
     return [cur, count]
 
 
+# Овражный метод
 def ravine_method(func, grad, x, eps):
     count = 0
     cur = list(x)
@@ -335,6 +342,7 @@ def ravine_method(func, grad, x, eps):
 
 
 # func using as second grad
+# Метод Ньютона
 def newton_method(reverse, grad, x, eps):
     count = 0
     cur = list(x)
@@ -351,6 +359,7 @@ def newton_method(reverse, grad, x, eps):
     return [cur, count]
 
 
+# Квази-Ньютоновский 1 порядка
 def quasi_newton(func, grad, x, eps):
     count = 0
     H = Matrix(ones(len(x)))
@@ -376,16 +385,18 @@ def quasi_newton(func, grad, x, eps):
             H += A * (1.0 / B.data[0][0])
 
 
+# Метод сопряженных градиентов
 def conjugate_gradient(func, grad, x, eps):
     count = 0
     cur = list(x)
-    d = grad(cur)
+    d = [-x for x in grad(cur)]
     b = 0
     iter = 0
     while True:
         iter += 1
         last = list(cur)
         cur, c = gold_section_in_space(func, cur, eps*eps, d)
+        f_ = func(cur)
         count += c
         if norma(grad(cur)) < eps:  # Exit
             return [cur, count]
@@ -399,12 +410,11 @@ def conjugate_gradient(func, grad, x, eps):
         #  d = -grad(cur) + b * d
         t = list(d)
         for i, it in enumerate(t):
-            it *= b
+            t[i] *= b
         g = grad(cur)
         count += 1
         for i, it in enumerate(d):
-            d[i] = t[i] + g[i]
-
+            d[i] = t[i] - g[i]
 
 
 allmethods = [
@@ -415,9 +425,9 @@ allmethods = [
     #convergent_series
     fastest_grad_method_p,
     ravine_method,
-    newton_method,
+    #newton_method,
     quasi_newton,
-    conjugate_gradient,
+    #conjugate_gradient,
 ]
 
 
@@ -448,6 +458,6 @@ def run_all_methods(output, func, grad, dgrad, beg: list, eps: float):
 
 if __name__ == '__main__':
     file = open('multidmethods.md', 'w')
-    run_all_methods(file, f17102, f17102_g, f17102_dg, [2, 2], 0.001)
-    run_all_methods(file, fsqr, fsqrt_g, fsqrt_dg, [2, 2], 0.001)
-    run_all_methods(file, f17101, f17101_g, None, [1, 1], 0.001)
+    run_all_methods(file, f17102, f17102_g, f17102_dg, [2, 2], 0.00001)
+    #run_all_methods(file, fsqr, fsqrt_g, fsqrt_dg, [2, 2], 0.001)
+    #run_all_methods(file, f17101, f17101_g, None, [1, 1], 0.001)
