@@ -1,6 +1,5 @@
 import time
 from matrix import *
-import numpy
 
 
 # F(X)= sqrt(1 + x[0]^2 + x[1]^2)
@@ -13,9 +12,13 @@ def f17102_g(x):
 
 
 def f17102_dg(x):
-    a11 = (1+x[0]**2+x[1]**2)**.5 * ((1+x[0]**2+x[1]**2)**2 - x[1]**2)
-    a22 = (1+x[0]**2+x[1]**2)**.5 * ((1+x[0]**2+x[1]**2)**2 - x[0]**2)
-    a12 = x[0]*x[1]*(1+x[0]**2+x[1]**2)**.5
+    s = 1 + x[0]**2 + x[1]**2
+    a11 = 1/s**.5 - x[0]**2/s**1.5
+    a22 = 1/s**.5 - x[1]**2/s**1.5
+    a12 = - x[0]*x[1]/s**.5
+    #a11 = (1+x[0]**2+x[1]**2)**.5 * ((1+x[0]**.5+x[1]**.5)**2 - x[1]**2)
+    #a22 = (1+x[0]**2+x[1]**2)**.5 * ((1+x[0]**.5+x[1]**.5)**2 - x[0]**2)
+    #a12 = x[0]*x[1]*(1+x[0]**2+x[1]**2)**.5
     ans = [[a11, a12], [a12, a22]]
     return ans
 
@@ -334,7 +337,7 @@ def ravine_method(func, grad, x, eps):
         direction = list(mn1[0])
         for i, it in enumerate(direction):
             direction[i] -= mn2[0][i]
-        cur, count = gold_section_in_space(func, mn1[0], eps*eps, direction)
+        cur, count = gold_section_in_space(func, mn1[0], eps*1e-03, direction)
         if norma(grad(cur)) < eps:
             break
 
@@ -343,17 +346,17 @@ def ravine_method(func, grad, x, eps):
 
 # func using as second grad
 # Метод Ньютона
-def newton_method(reverse, grad, x, eps):
+def newton_method(direct, grad, x, eps):
     count = 0
     cur = list(x)
     while True:
-        r = reverse(cur)
-        f1 = numpy.array(r)
-        f2 = numpy.array(grad(cur))
+        r = Matrix(direct(cur))
+        f1 = r.inverse()
+        f2 = Matrix([grad(cur)]).transpose()
         count += 2
-        step = f1.__matmul__(f2)
+        step = f1*f2
         for i, it in enumerate(cur):
-            cur[i] -= step[i]
+            cur[i] -= step.data[i][0]
         if norma(grad(cur)) < eps:
             break
     return [cur, count]
@@ -395,7 +398,7 @@ def conjugate_gradient(func, grad, x, eps):
     while True:
         iter += 1
         last = list(cur)
-        cur, c = gold_section_in_space(func, cur, eps*eps, d)
+        cur, c = gold_section_in_space(func, cur, eps*1e-03, d)
         f_ = func(cur)
         count += c
         if norma(grad(cur)) < eps:  # Exit
@@ -426,7 +429,7 @@ allmethods = [
     fastest_grad_method_p,
     ravine_method,
     #newton_method,
-    quasi_newton,
+    #quasi_newton,
     #conjugate_gradient,
 ]
 
@@ -442,22 +445,114 @@ def run_method(output, method, func, grad, beg, eps):
         print("__Performance__:  ", file=output)
         print("`func calls` =", ans[1], end="  \n", file=output)
         print("`time` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
-    except Exception as ex:
+        print('OK')
+    except KeyError as ex:#Exception as ex:
         print("__Error__:`", ex, "`", file=output)
+        print('Error:', ex)
     print("\n\n", file=output)
 
 
 def run_all_methods(output, func, grad, dgrad, beg: list, eps: float):
     print("# ", func.__name__, "  \nstart from ", beg, "eps=", eps, end="  \n\n---  \n\n", file=output)
-    for each in allmethods:
+    for i, each in enumerate(allmethods):
+        print(each.__name__, '\t\t{}/{}'.format(i+1, len(allmethods)), end='\t')
         if each is newton_method:
             run_method(output, each, dgrad, grad, beg, eps)
         else:
             run_method(output, each, func, grad, beg, eps)
 
+################################################################################################################
+
+# Метод внешних штрафов
+# cond = list[func, [не строгие условия], [строгие условия]]
+def out_penalty(cond, beg, eps):
+    # init
+    cur = list(beg)
+    func = cond[0]
+    G = list(cond[1]) if len(cond[1]) != 0 else []
+    H = list(cond[2]) if len(cond[2]) != 0 else []
+    r = 1
+    delt = 10
+    count = 0
+
+    # support functions
+    def penalty(x):
+        a = sum([max(0, gi(x))**2 for gi in G])
+        b = sum([hi(x)**2 for hi in H])
+        return a + b
+
+    def minimiz(x):
+        return func(x) + r * penalty(x)
+
+    # main loop
+    while True:
+        cur, c = coordinate_wise_method(minimiz, None, cur, eps * 1e-03)
+        count += c
+        if penalty(cur) < eps:
+            return [cur, count]
+        r *= delt
+
+allconmethods = [
+    out_penalty,
+]
+
+def run_cond_meth(output, method, cond, beg, eps):
+    print("## Method: ", method.__name__, file=output)
+    start = time.time()
+    try:
+        ans = method(cond, beg, eps)
+        print("__Answer__:  ", file=output)
+        print("`Xmin` =", ans[0], end="  \n", file=output)
+        f = cond[0](ans[0])
+        print("`F(Xmin)` = ", f, end="  \n", file=output)
+        for i, each in enumerate(cond[1]):
+            print("`G{num}(x)` = ".format(num=i), each(ans[0]), end="  \n", file=output)
+        for i, each in enumerate(cond[2]):
+            print("`H{num}(x)` = ".format(num=i), each(ans[0]), end="  \n", file=output)
+        print("__Performance__:  ", file=output)
+        print("`func calls` =", ans[1], end="  \n", file=output)
+        print("`time` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
+    except KeyError as ex:#Exception as ex:
+        print("__Error__:`", ex, "`", file=output)
+    print("\n\n", file=output)
+
+
+def run_all_cond_methods(file, c, x, eps):
+    print('# ', 'number 17.281', '  \nstart from ', x, 'eps=', eps, end='  \n\n---  \n\n', file=file)
+    for each in allconmethods:
+        run_cond_meth(file, each, c, x, eps)
+
+
+def n17_281_func(x):
+    return x[0]**2 + 2* x[1]**2 - 16 * x[0] - 20 * x[1]
+
+def n17_281_g1(x):
+    return 2*x[0] + 5*x[1] - 40
+
+def n17_281_g2(x):
+    return 2*x[0] + x[1] - 16
+
+def n17_281_g3(x):
+    return -x[0]
+
+def n17_281_g4(x):
+    return -x[1]
 
 if __name__ == '__main__':
     file = open('multidmethods.md', 'w')
-    run_all_methods(file, f17102, f17102_g, f17102_dg, [2, 2], 0.00001)
+    run_all_methods(file, f17102, f17102_g, f17102_dg, [2, 2], 1e-06)
     #run_all_methods(file, fsqr, fsqrt_g, fsqrt_dg, [2, 2], 0.001)
-    #run_all_methods(file, f17101, f17101_g, None, [1, 1], 0.001)
+    #run_all_methods(file, f17101, f17101_g, None, [1, 1], 0.0001)
+    condition17_281 = [
+        n17_281_func,
+        [
+            n17_281_g1,
+            n17_281_g2,
+            n17_281_g3,
+            n17_281_g4,
+        ],
+        []
+    ]
+    run_all_cond_methods(file, condition17_281, [2,2], 1e-09)
+
+    file.close()
