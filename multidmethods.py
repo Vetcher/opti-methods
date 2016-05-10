@@ -15,10 +15,7 @@ def f17102_dg(x):
     s = 1 + x[0]**2 + x[1]**2
     a11 = 1/s**.5 - x[0]**2/s**1.5
     a22 = 1/s**.5 - x[1]**2/s**1.5
-    a12 = - x[0]*x[1]/s**.5
-    #a11 = (1+x[0]**2+x[1]**2)**.5 * ((1+x[0]**.5+x[1]**.5)**2 - x[1]**2)
-    #a22 = (1+x[0]**2+x[1]**2)**.5 * ((1+x[0]**.5+x[1]**.5)**2 - x[0]**2)
-    #a12 = x[0]*x[1]*(1+x[0]**2+x[1]**2)**.5
+    a12 = - x[0]*x[1]/(s**.5)**1.5
     ans = [[a11, a12], [a12, a22]]
     return ans
 
@@ -29,6 +26,12 @@ def f17101(x):
 
 def f17101_g(x):
     return [8*x[0]-2*x[1]+6, 2*x[1]-2*x[0]-1]
+
+def f17101_gg(x):
+    a11 = 8.0
+    a12 = -2.0
+    a22 = 2.0
+    return [[a11, a12],[a12, a22]]
 
 def fsqr(x):
     return (x[0]-5)**2 + (x[1]-3)**4
@@ -57,7 +60,7 @@ def gold_section_in_space(func, x, eps, dir):
 
     old = list(prev)
     for i in range(len(prev)):         # make small step to start search
-        prev[i] -= delta*direction[i]  # delta for use gold section method
+        prev[i] += delta*direction[i]  # delta for use gold section method
     count += 1
 
     f_for_delta = func(prev)  # func value for new point
@@ -65,13 +68,13 @@ def gold_section_in_space(func, x, eps, dir):
     while f_for_delta <= f_prev:
         delta = delta * 1.3 + delta**.5  # variate this function
         for i in range(len(prev)):  # do new step
-            prev[i] = old[i] - delta*direction[i]
+            prev[i] = old[i] + delta*direction[i]
         count += 1
         f_for_delta = func(prev)
 
     # Golden section method
     right = delta
-    left = 0
+    left = 0.0
     left_p = old
     right_p = prev
 
@@ -79,10 +82,15 @@ def gold_section_in_space(func, x, eps, dir):
     c_arg = list(left_p)
     c = left + (right - left) * (3 - 5**.5) / 2.0
     for i in range(len(c_arg)):
-        c_arg[i] -= c * direction[i]
+        c_arg[i] += c * direction[i]
 
     # Copy right probe
-    d_arg = list(right_p)
+    #d_arg = list(right_p)
+    #d = right - (right - left) * (3 - 5**.5) / 2.0
+    #for i in range(len(d_arg)):
+    #    d_arg[i] -= d * direction[i]
+
+    d_arg = list(left_p)
     d = right - (right - left) * (3 - 5**.5) / 2.0
     for i in range(len(d_arg)):
         d_arg[i] += d * direction[i]
@@ -98,7 +106,7 @@ def gold_section_in_space(func, x, eps, dir):
             c = left + (right - left) * (3 - 5**.5) / 2.0
             c_arg = list(left_p)
             for i in range(len(c_arg)):
-                c_arg[i] -= c * direction[i]
+                c_arg[i] += c * direction[i]
             count += 1
             fc = func(c_arg)
         else:
@@ -106,16 +114,16 @@ def gold_section_in_space(func, x, eps, dir):
             if abs(right - left) < 2*eps:
                 break
             c, fc = d, fd
-            d_arg = list(right_p)
+            d_arg = list(left_p) # rihgt_p
             d = right - (right - left) * (3 - 5**.5) / 2.0
             for i in range(len(d_arg)):
-                d_arg[i] += d * direction[i]
+                d_arg[i] += d * direction[i] # -
             count += 1
             fd = func(d_arg)
     delta = (right + left) / 2.0
     test = list()
     for i, it in enumerate(cur):
-        test.append(old[i] - delta*direction[i])
+        test.append(old[i] + delta*direction[i])
     if func(test) < func(cur):
         cur = test
 
@@ -156,14 +164,16 @@ def gradient_fix_step(func, grad, x, eps):
     cur = list(x)
     alf = 0.1
     count = 0
+    iter = 0
     # Do - While loop
     while True:
         for i in range(len(x)):
             cur[i] -= alf * grad(cur)[i]
         count += 1
+        iter += 1
         if norma(grad(cur)) < eps:  # loop escape
             break
-    return [cur, count]
+    return [cur, count, iter]
 
 
 # Градиентный спуск с дроблением шага
@@ -171,6 +181,7 @@ def gradient_change_step(func, grad, x, eps):
     cur = list(x)
     lbd = 0.5
     count = 0
+    iter = 0
     # Do - While loop
     while True:
         alf = 10
@@ -185,28 +196,42 @@ def gradient_change_step(func, grad, x, eps):
             else:
                 alf *= lbd
         cur = next
+        iter += 1
         if norma(grad(cur)) < eps:  # loop escape
             break
-    return [cur, count]
+    return [cur, count, iter]
 
 
 # Покоординатный спуск
 def coordinate_wise_method(func, grad, x, eps):
     next = list(x)
     count = 0
+    iter = 0
     while True:
         cur = list(next)
         for i in range(len(x)):
-            # Gold section method
-            right = next[i]
-            if -right < right:
-                right *= 2.0
-            else:
-                right = -right*2.0
-            left = -right
+            left, right = next[i], next[i]
+            delta = 0.1
+            f2 = func(next)
+            while True: # Do - While
+                left -= delta
+                delta += 2*delta
+                nxt = [next[d] if i != d else left for d in range(len(x))]
+                f1, f2 = f2, func(nxt)
+                count += 1
+                if f2 > f1: break
+            delta = 0.1
+            f2 = func(next)
+            while True:
+                right += delta
+                delta += 2*delta
+                nxt = [next[d] if i != d else right for d in range(len(x))]
+                f1, f2 = f2, func(nxt)
+                count += 1
+                if f2 > f1: break
             if right - left < 2*eps:
                 next[i] = (right + left) / 2.0
-                break
+                continue
             c_arg = list(next)
             c = left + (right - left) * (3 - 5**.5) / 2.0
             c_arg[i] = c
@@ -216,10 +241,10 @@ def coordinate_wise_method(func, grad, x, eps):
             d_arg[i] = d
             count += 1
             fc, fd = func(c_arg), func(d_arg)
-            while right - left > 2*eps:
+            while right - left > 2*eps*eps:
                 if fc < fd:
                     right = d
-                    if right - left < 2*eps:
+                    if right - left < 2*eps*eps:
                         break
                     d, fd = c, fc
                     c = left + (right - left) * (3 - 5**.5) / 2.0
@@ -228,7 +253,7 @@ def coordinate_wise_method(func, grad, x, eps):
                     fc = func(c_arg)
                 else:
                     left = c
-                    if right - left < 2*eps:
+                    if right - left < 2*eps*eps:
                         break
                     c, fc = d, fd
                     d = right - (right - left) * (3 - 5**.5) / 2.0
@@ -236,9 +261,10 @@ def coordinate_wise_method(func, grad, x, eps):
                     count += 1
                     fd = func(d_arg)
             next[i] = (left + right) / 2.0
+        iter += 1
         if abs(func(cur) - func(next)) < eps:
             break
-    return [next, count]
+    return [next, count, iter]
 
 
 class Expr(object):
@@ -254,18 +280,21 @@ def mngs(func, grad, x, eps, expr):
     cur = list(x)
     count = 1
     f_cur = func(x)
+    iter = 0
     # Do - While loop
     while expr.is_true():
         f_prev = f_cur
-        p, c = gold_section_in_space(func, cur, eps**2, grad(cur))
+        direct = [-x for x in grad(cur)]
+        p, c = gold_section_in_space(func, cur, eps**2, direct)
         count += c
         cur = p
         f_cur = func(p)
         count += 1
+        iter += 1
         if norma(grad(cur)) < eps:  # or f_prev - f_cur < eps:  # loop escape
             break
 
-    return [cur, count]
+    return [cur, count, iter]
 
 
 # Наискорейший градиентный спуск
@@ -278,6 +307,7 @@ def convergent_series(func, grad, x, eps):
     cur = list(x)
     n = 0
     count = 0
+    iter = 0
     # Do - While loop
     while True:
         n += 1
@@ -285,9 +315,10 @@ def convergent_series(func, grad, x, eps):
         for i in range(len(x)):
             cur[i] -= 1.0 / n * direction[i]
         count += 1
+        iter += 1
         if norma(grad(cur)) < eps:  # loop escape
             break
-    return [cur, count]
+    return [cur, count, iter]
 
 
 class ExprCount(Expr):
@@ -306,6 +337,7 @@ class ExprCount(Expr):
 def fastest_grad_method_p(func, grad, x, eps):
     count = 0
     cur = list(x)
+    iter = 0
     while True:
         mn = mngs(func, grad, cur, eps, ExprCount(0, len(x)))
         count += mn[1]
@@ -314,17 +346,18 @@ def fastest_grad_method_p(func, grad, x, eps):
             step_dir.append(mn[0][i] - cur[i])
         cur, c = gold_section_in_space(func, mn[0], eps**2, step_dir)
         count += c
+        iter += 1
         if norma(grad(cur)) < eps:  # loop escape
             break
 
-    return [cur, count]
+    return [cur, count, iter]
 
 
 # Овражный метод
 def ravine_method(func, grad, x, eps):
     count = 0
     cur = list(x)
-
+    iter = 0
     while True:
         mn1 = mngs(func, grad, cur, eps, ExprCount(0, len(x) - 1))
         if norma(grad(cur)) < eps:
@@ -338,10 +371,11 @@ def ravine_method(func, grad, x, eps):
         for i, it in enumerate(direction):
             direction[i] -= mn2[0][i]
         cur, count = gold_section_in_space(func, mn1[0], eps*1e-03, direction)
+        iter += 1
         if norma(grad(cur)) < eps:
             break
 
-    return [cur, count]
+    return [cur, count, iter]
 
 
 # func using as second grad
@@ -349,6 +383,7 @@ def ravine_method(func, grad, x, eps):
 def newton_method(direct, grad, x, eps):
     count = 0
     cur = list(x)
+    iter = 0
     while True:
         r = Matrix(direct(cur))
         f1 = r.inverse()
@@ -357,9 +392,10 @@ def newton_method(direct, grad, x, eps):
         step = f1*f2
         for i, it in enumerate(cur):
             cur[i] -= step.data[i][0]
+        iter += 1
         if norma(grad(cur)) < eps:
             break
-    return [cur, count]
+    return [cur, count, iter]
 
 
 # Квази-Ньютоновский 1 порядка
@@ -371,13 +407,13 @@ def quasi_newton(func, grad, x, eps):
     while True:
         last = list(cur)
         iter += 1
-        direction = H * Matrix(make_matrix(grad(cur)))
+        direction = H * Matrix(make_matrix([-x for x in grad(cur)]))
         cur, c = gold_section_in_space(func, cur, eps*eps, make_vector(direction.data))
         count += c
         if norma(grad(cur)) < eps:  # Exit
-            return [cur, count]
+            return [cur, count, iter]
 
-        if iter%(len(x) + 1) == 0:
+        if iter%(len(x)*2) == 0:
             H = Matrix(ones(len(x)))
         else:
             tx = Matrix(make_matrix(cur)) - Matrix(make_matrix(last))
@@ -402,7 +438,7 @@ def conjugate_gradient(func, grad, x, eps):
         f_ = func(cur)
         count += c
         if norma(grad(cur)) < eps:  # Exit
-            return [cur, count]
+            return [cur, count, iter]
 
         if iter%(len(x)*2) == 0:
             b = 0
@@ -425,12 +461,12 @@ allmethods = [
     gradient_change_step,
     coordinate_wise_method,
     fast_gradient,
-    #convergent_series
+    #convergent_series,
     fastest_grad_method_p,
     ravine_method,
-    #newton_method,
-    #quasi_newton,
-    #conjugate_gradient,
+    newton_method,
+    quasi_newton,
+    conjugate_gradient,
 ]
 
 
@@ -443,10 +479,11 @@ def run_method(output, method, func, grad, beg, eps):
         print("`Xmin` =", ans[0], end="  \n", file=output)
         print("`F(Xmin)` = ", func(ans[0]), end="  \n", file=output)
         print("__Performance__:  ", file=output)
+        print("`iterations` =", ans[2], end="  \n", file=output)
         print("`func calls` =", ans[1], end="  \n", file=output)
         print("`time` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
         print('OK')
-    except KeyError as ex:#Exception as ex:
+    except Exception as ex:
         print("__Error__:`", ex, "`", file=output)
         print('Error:', ex)
     print("\n\n", file=output)
@@ -486,7 +523,7 @@ def out_penalty(cond, beg, eps):
 
     # main loop
     while True:
-        cur, c = coordinate_wise_method(minimiz, None, cur, eps * 1e-03)
+        cur, c, iter = coordinate_wise_method(minimiz, None, cur, eps * 1e-03)
         count += c
         if penalty(cur) < eps:
             return [cur, count]
@@ -512,7 +549,7 @@ def run_cond_meth(output, method, cond, beg, eps):
         print("__Performance__:  ", file=output)
         print("`func calls` =", ans[1], end="  \n", file=output)
         print("`time` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
-    except KeyError as ex:#Exception as ex:
+    except Exception as ex:
         print("__Error__:`", ex, "`", file=output)
     print("\n\n", file=output)
 
@@ -538,11 +575,19 @@ def n17_281_g3(x):
 def n17_281_g4(x):
     return -x[1]
 
+def f_chm(x):
+    return x[0]*x[0]+x[0]*x[2]+x[1]*x[1]-2*x[0]+x[1]-x[2]
+
+# 2x + z - 2; 2y + 1; x + 2z - 1
+def f_chm_g(x):
+    return [2*x[0] + x[2] - 2, 2*x[1] + 1, x[0] + 2*x[2] - 1]
+
 if __name__ == '__main__':
     file = open('multidmethods.md', 'w')
-    run_all_methods(file, f17102, f17102_g, f17102_dg, [2, 2], 1e-06)
-    #run_all_methods(file, fsqr, fsqrt_g, fsqrt_dg, [2, 2], 0.001)
-    #run_all_methods(file, f17101, f17101_g, None, [1, 1], 0.0001)
+    run_all_methods(file, f17102, f17102_g, f17102_dg, [0.5, 0.5], 1e-06)
+    #run_all_methods(file, fsqr, fsqrt_g, fsqrt_dg, [4.9, 2.9], 0.00001)
+    run_all_methods(file, f17101, f17101_g, f17101_gg, [1, 1], 0.00001)
+    #run_all_methods(file, f_chm, f_chm_g, None, [1, 1, 1], 0.00001)
     condition17_281 = [
         n17_281_func,
         [
@@ -553,6 +598,6 @@ if __name__ == '__main__':
         ],
         []
     ]
-    run_all_cond_methods(file, condition17_281, [2,2], 1e-09)
+    run_all_cond_methods(file, condition17_281, [2,2], 1e-04)
 
     file.close()
