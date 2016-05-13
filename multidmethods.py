@@ -461,7 +461,7 @@ allmethods = [
     gradient_change_step,
     coordinate_wise_method,
     fast_gradient,
-    #convergent_series,
+    convergent_series,
     fastest_grad_method_p,
     ravine_method,
     newton_method,
@@ -469,19 +469,32 @@ allmethods = [
     conjugate_gradient,
 ]
 
+methods_names = {
+    'gradient_fix_step': 'Градиентный метод с постоянным шагом',
+    'gradient_change_step': 'Градиентный метод с изменяющимся шагом',
+    'coordinate_wise_method': "Метод покоординатного спуска",
+    'fast_gradient': "МНГС",
+    'convergent_series': "Метод расходящегося ряда",
+    'fastest_grad_method_p': "Метод наискорейшего спуска _p_-го порядка",
+    'ravine_method': "Овражный метод",
+    'newton_method': "Метод Ньютона",
+    'quasi_newton': "Квази-Ньютоновкий метод с поправкой ранга 1",
+    'conjugate_gradient': "Метод сопряженных направлений",
+}
+
 
 def run_method(output, method, func, grad, beg, eps):
-    print("## Method: ", method.__name__, file=output)
+    print("###__Метод__: ", methods_names.get(method.__name__), file=output)
     start = time.time()
     try:
         ans = method(func, grad, beg, eps)
-        print("__Answer__:  ", file=output)
+        print("__Ответ__:  ", file=output)
         print("`Xmin` =", ans[0], end="  \n", file=output)
         print("`F(Xmin)` = ", func(ans[0]), end="  \n", file=output)
-        print("__Performance__:  ", file=output)
-        print("`iterations` =", ans[2], end="  \n", file=output)
-        print("`func calls` =", ans[1], end="  \n", file=output)
-        print("`time` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
+        print("__Производительность__:  ", file=output)
+        print("`Итерации` =", ans[2], end="  \n", file=output)
+        print("`Вызовов функции` =", ans[1], end="  \n", file=output)
+        print("`Время` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
         print('OK')
     except Exception as ex:
         print("__Error__:`", ex, "`", file=output)
@@ -490,7 +503,7 @@ def run_method(output, method, func, grad, beg, eps):
 
 
 def run_all_methods(output, func, grad, dgrad, beg: list, eps: float):
-    print("# ", func.__name__, "  \nstart from ", beg, "eps=", eps, end="  \n\n---  \n\n", file=output)
+    print("---  \n#", func.__name__, "\n#####Начальная точка ", beg, "`\u03B5`=", eps, end="\n\n", file=output)
     for i, each in enumerate(allmethods):
         print(each.__name__, '\t\t{}/{}'.format(i+1, len(allmethods)), end='\t')
         if each is newton_method:
@@ -538,7 +551,7 @@ def run_cond_meth(output, method, cond, beg, eps):
     start = time.time()
     try:
         ans = method(cond, beg, eps)
-        print("__Answer__:  ", file=output)
+        print("__Ответ__:  ", file=output)
         print("`Xmin` =", ans[0], end="  \n", file=output)
         f = cond[0](ans[0])
         print("`F(Xmin)` = ", f, end="  \n", file=output)
@@ -546,16 +559,16 @@ def run_cond_meth(output, method, cond, beg, eps):
             print("`G{num}(x)` = ".format(num=i), each(ans[0]), end="  \n", file=output)
         for i, each in enumerate(cond[2]):
             print("`H{num}(x)` = ".format(num=i), each(ans[0]), end="  \n", file=output)
-        print("__Performance__:  ", file=output)
-        print("`func calls` =", ans[1], end="  \n", file=output)
-        print("`time` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
+        print("__Производительность__:  ", file=output)
+        print("`Вызовы функции` =", ans[1], end="  \n", file=output)
+        print("`Время` = ", round((time.time() - start)*1000, 3), "(ms)", file=output)
     except Exception as ex:
-        print("__Error__:`", ex, "`", file=output)
+        print("__Ошибка__:`", ex, "`", file=output)
     print("\n\n", file=output)
 
 
 def run_all_cond_methods(file, c, x, eps):
-    print('# ', 'number 17.281', '  \nstart from ', x, 'eps=', eps, end='  \n\n---  \n\n', file=file)
+    print('# ', 'Номер 17.281', '  \nНачальная точка ', x, '\u03B5=', eps, end='  \n\n---  \n\n', file=file)
     for each in allconmethods:
         run_cond_meth(file, each, c, x, eps)
 
@@ -575,19 +588,44 @@ def n17_281_g3(x):
 def n17_281_g4(x):
     return -x[1]
 
-def f_chm(x):
-    return x[0]*x[0]+x[0]*x[2]+x[1]*x[1]-2*x[0]+x[1]-x[2]
 
-# 2x + z - 2; 2y + 1; x + 2z - 1
-def f_chm_g(x):
-    return [2*x[0] + x[2] - 2, 2*x[1] + 1, x[0] + 2*x[2] - 1]
+def n17_280_func(x):
+    return 2*x[0]**2 + 3*x[1]**2 - 40*x[0]-48*x[1]
+
+def n17_280_g1(x):
+    return -x[0]
+
+def n17_280_g2(x):
+    return -x[1]
+
+def n17_280_g3(x):
+    return x[0]-x[1]-6
+
+def n17_280_g4(x):
+    return x[1]+0.8*x[0]-12
+
+def n17_280_g5(x):
+    return x[1] - 0.8*x[0]-4
+
+
+def numeric_methods(n):
+    def f_chm(Q):
+        x, y, z = Q[0], Q[1], Q[2]
+        return 2*x**2 + (3 + 0.1*n)*y**2 + (4 + 0.1*n)*z**2 + x*y - y*z + x*z + x - 2*y + 3*z + n
+
+    # 2x + z - 2; 2y + 1; x + 2z - 1
+    def f_chm_g(Q):
+        x, y, z = Q[0], Q[1], Q[2]
+        return [4*x + y + z + 1, 2*(3 + 0.1*n)*y + x - z - 2, 2*(4 + 0.1*n)*z - y + x + 3]
+
+    return f_chm, f_chm_g
 
 if __name__ == '__main__':
-    file = open('multidmethods.md', 'w')
+    file = open('multidmethods.md', 'w', encoding='utf-8')
     run_all_methods(file, f17102, f17102_g, f17102_dg, [0.5, 0.5], 1e-06)
     #run_all_methods(file, fsqr, fsqrt_g, fsqrt_dg, [4.9, 2.9], 0.00001)
     run_all_methods(file, f17101, f17101_g, f17101_gg, [1, 1], 0.00001)
-    #run_all_methods(file, f_chm, f_chm_g, None, [1, 1, 1], 0.00001)
+
     condition17_281 = [
         n17_281_func,
         [
@@ -598,6 +636,26 @@ if __name__ == '__main__':
         ],
         []
     ]
+    condition17_280 = [
+        n17_280_func,
+        [
+            n17_280_g1,
+            n17_280_g2,
+            n17_280_g3,
+            n17_280_g4,
+            n17_280_g5,
+        ],
+        []
+    ]
     run_all_cond_methods(file, condition17_281, [2,2], 1e-04)
+    run_all_cond_methods(file, condition17_280, [2,2], 1e-04)
 
     file.close()
+
+#if __name__ == '__main__':
+#    file = open('ch.txt', 'w', encoding='utf-8')
+#    for n in [1, 2, 3, 5, 7, 9]:
+#        print(n, 'start')
+#        func, func_g = numeric_methods(n)
+#        run_all_methods(file, func, func_g, None, [1, 1, 1], 1e-06)
+#    file.close()
